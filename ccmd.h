@@ -32,13 +32,13 @@ typedef pthread_t Process;
 #else // Linux Process
 
 typedef HANDLE Process;
-/* Alternatinve: "cmd /C " */
+/* Alternative: "cmd /C " */
 const char *SHELL = "powershell -Command ";
 
 #endif // Windows Process and SHELL
 
 void ccmd_unload(CCMD *ccmd);
-void ccmd_append(CCMD *ccmd, ...);
+// void ccmd_append(CCMD *ccmd, ...);   // done as macro, to avoid having to pass NULL at the end of passed args
 void ccmd_appenda(CCMD *ccmd, const char **args, int argc);
 void ccmd_log(CCMD *ccmd);
 
@@ -90,7 +90,7 @@ void ccmd_unload(CCMD *ccmd)
     ccmd->args = NULL;
 }
 
-void ccmd_append(CCMD *ccmd, ...)
+void _ccmd_append(CCMD *ccmd, ...)
 {
     va_list args;
     va_start(args, ccmd);
@@ -116,12 +116,15 @@ void ccmd_append(CCMD *ccmd, ...)
     va_end(args);
 }
 
+#define ccmd_append(ccmd, ...) _ccmd_append(ccmd, __VA_ARGS__, NULL)
+
 void ccmd_appenda(CCMD *ccmd, const char **args, int argc)
 {
     for (int i = 0; i < argc; i++)
     {
         ccmd->args = realloc(ccmd->args, sizeof(char *) * (ccmd->argc + 1));
-        ccmd->args[ccmd->argc] = args[i];
+
+        ccmd->args[ccmd->argc] = (char *)args[i];
         ccmd->argc++;
     }
     return;
